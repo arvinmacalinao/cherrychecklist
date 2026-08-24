@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* 🔥 TOM SELECT + DAISYUI THEME */
+
+.ts-wrapper {
+    width: 100% !important;
+}
+
+.ts-control {
+    background: hsl(var(--b1)) !important;
+    border-color: hsl(var(--bc) / 0.2) !important;
+    color: hsl(var(--bc)) !important;
+    min-height: 3rem;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.ts-dropdown {
+    background: hsl(var(--b1)) !important;
+    color: hsl(var(--bc)) !important;
+}
+
+.ts-dropdown .active {
+    background: hsl(var(--p)) !important;
+    color: hsl(var(--pc)) !important;
+}
+
+/* Tom Select input text */
+.ts-control input {
+    color: hsl(var(--bc)) !important;
+}
+
+/* Placeholder */
+.ts-control input::placeholder {
+    color: hsl(var(--bc) / 0.5) !important;
+}
