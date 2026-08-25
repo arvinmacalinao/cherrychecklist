@@ -144,7 +144,7 @@
             </div>
 
             <button id="confirm-btn" class="btn btn-success btn-block btn-lg">
-                Confirm Exit
+                Scan Next Employee
             </button>
         `;
 

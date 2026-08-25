@@ -26,7 +26,11 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    if (auth()->check()) {
+        return auth()->user()->dashboardRedirect();
+    }
+
+    return redirect()->route('login');
 });
 
 // Generic post-login landing spot. RouteServiceProvider::HOME points here, and
