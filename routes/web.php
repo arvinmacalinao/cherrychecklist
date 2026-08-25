@@ -10,6 +10,7 @@ use App\Livewire\Admin\Logs\Index as LogsIndex;
 use App\Livewire\Admin\Users\Create as UserCreate;
 use App\Livewire\Admin\Users\Edit as UserEdit;
 use App\Livewire\Admin\Users\Index as UserIndex;
+use App\Livewire\Admin\Users\Show as UserShow;
 use App\Livewire\Employee\Dashboard as EmployeeDashboard;
 use App\Livewire\Guard\Scanner;
 use Illuminate\Support\Facades\Route;
@@ -51,6 +52,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/admin/users', UserIndex::class)->name('admin.users.index');
     Route::get('/admin/users/create', UserCreate::class)->name('admin.user.create');
+    Route::get('/admin/users/{user}', UserShow::class)->name('admin.users.show');
     Route::get('/admin/users/{user}/edit', UserEdit::class)->name('admin.users.edit');
 
     Route::get('/admin/devices', DeviceIndex::class)->name('admin.devices.index');

@@ -31,7 +31,9 @@ class User extends Authenticatable
         'username',
         'designation_id',
         'company_id',
-        'qr_token'
+        'qr_token',
+        'status',
+        'photo_path',
     ];
 
     /**

@@ -80,6 +80,7 @@
                         <th>Role</th>
                         <th>Designation</th>
                         <th>Company</th>
+                        <th class="text-center">Status</th>
                         <th class="text-center w-32">Actions</th>
                     </tr>
 
@@ -89,7 +90,7 @@
 
                     @forelse ($users as $user)
 
-                        <tr>
+                        <tr wire:key="user-{{ $user->id }}">
 
                             <td>
                                 {{ ($users->currentPage() - 1) * $users->perPage() + $loop->iteration }}
@@ -110,7 +111,7 @@
                             </td>
 
                             <td>
-                                {{ $user->email }}
+                                {{ $user->email ?? '-' }}
                             </td>
 
                             <td>
@@ -127,13 +128,19 @@
                                 {{ $user->company->name ?? '-' }}
                             </td>
 
+                            <td class="text-center">
+                                <div class="badge {{ $user->status === 'active' ? 'badge-success' : 'badge-error' }} badge-sm">
+                                    {{ ucfirst($user->status) }}
+                                </div>
+                            </td>
+
                             <td>
 
                                 <div class="flex items-center justify-center gap-2">
 
-                                    <button class="btn btn-xs btn-info">
+                                    <a class="btn btn-xs btn-info" href="{{ route('admin.users.show', $user) }}">
                                         View
-                                    </button>
+                                    </a>
 
                                     <a class="btn btn-xs btn-warning" href="{{ route('admin.users.edit', $user) }}">
                                         Edit
@@ -149,7 +156,7 @@
 
                         <tr>
 
-                            <td colspan="7" class="text-center py-10">
+                            <td colspan="8" class="text-center py-10">
 
                                 <div class="flex flex-col items-center gap-2 opacity-60">
 

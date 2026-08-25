@@ -55,6 +55,19 @@ class LoginRequest extends FormRequest
                     'login' => trans('auth.failed'),
                 ]);
             }
+
+            if (Auth::user()->status !== 'active') {
+
+                Auth::logout();
+
+                RateLimiter::hit($this->throttleKey());
+
+                throw ValidationException::withMessages([
+                    'login' => 'This account is inactive. Please contact an administrator.',
+                ]);
+            }
+
+            RateLimiter::clear($this->throttleKey());
         }
 
     /**
