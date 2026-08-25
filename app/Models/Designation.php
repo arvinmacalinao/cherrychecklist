@@ -11,7 +11,7 @@ class Designation extends Model
 
     protected $table = 'designations';
 
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'description', 'hr_ref_id'];
 
     public function users()
     {

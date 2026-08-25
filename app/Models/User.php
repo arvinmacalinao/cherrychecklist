@@ -89,6 +89,29 @@ class User extends Authenticatable
         return route('qr.show', ['token' => $this->qr_token]);
     }
 
+    /**
+     * Appends an incrementing numeric suffix until $base is free. Shared by
+     * manual admin creation and the HR sync — HR's own per-employee username
+     * isn't guaranteed globally unique, so the sync needs the same
+     * collision handling the "Create User" form already does.
+     */
+    public static function uniqueUsername(string $base, ?int $excludeUserId = null): string
+    {
+        $username = $base;
+        $counter = 1;
+
+        while (
+            static::where('username', $username)
+                ->when($excludeUserId, fn ($query) => $query->where('id', '!=', $excludeUserId))
+                ->exists()
+        ) {
+            $username = $base.$counter;
+            $counter++;
+        }
+
+        return $username;
+    }
+
     public function dashboardRedirect(): \Illuminate\Http\RedirectResponse
     {
         if ($this->hasRole('admin')) {

@@ -36,7 +36,7 @@ class Create extends Component
             'status' => 'required',
         ]);
 
-        // Generate username
+        // Generate username: first letter of first name + last word of full name.
         $nameParts = preg_split('/\s+/', trim($this->name));
 
         $baseUsername = strtolower(
@@ -44,17 +44,7 @@ class Create extends Component
             end($nameParts)
         );
 
-        $username = $baseUsername;
-
-        $counter = 1;
-
-        // Ensure unique username
-        while (User::where('username', $username)->exists()) {
-
-            $username = $baseUsername . $counter;
-
-            $counter++;
-        }
+        $username = User::uniqueUsername($baseUsername);
 
         $user = User::create([
             'employee_id' => $this->employee_id,

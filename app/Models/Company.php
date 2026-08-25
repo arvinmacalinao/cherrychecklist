@@ -9,7 +9,7 @@ class Company extends Model
 {
     protected $table = 'companies';
 
-    protected $fillable = ['name', 'alias'];
+    protected $fillable = ['name', 'alias', 'hr_ref_id'];
 
     public function users()
     {
