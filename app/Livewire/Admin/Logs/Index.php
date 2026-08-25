@@ -2,17 +2,21 @@
 
 namespace App\Livewire\Admin\Logs;
 
+use App\Livewire\Concerns\ResetsPageOnUpdate;
+use App\Models\ExitLog;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\ExitLog;
 
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, ResetsPageOnUpdate;
 
-    public $perPage = 10;
-    public $search = '';
     public $date;
+
+    public function updatingDate(): void
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {

@@ -12,7 +12,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // App timezone stays UTC (see config/app.php); pinning the schedule
+        // itself to Asia/Manila keeps this at 10:00 PM PHT regardless.
+        $schedule->command('sync:employees')
+            ->timezone('Asia/Manila')
+            ->dailyAt('22:00')
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/sync-employees.log'));
     }
 
     /**

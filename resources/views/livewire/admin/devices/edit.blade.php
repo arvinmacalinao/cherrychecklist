@@ -240,12 +240,12 @@
                             Active
                         </option>
 
-                        <option value="inactive">
-                            Inactive
+                        <option value="returned">
+                            Returned
                         </option>
 
-                        <option value="maintenance">
-                            Maintenance
+                        <option value="lost">
+                            Lost
                         </option>
 
                     </select>

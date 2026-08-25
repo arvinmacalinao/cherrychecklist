@@ -16,7 +16,7 @@ class Create extends Component
 
     public function mount()
     {
-        $this->users = User::role('employee')->get();
+        $this->users = User::role('employee')->orderBy('name')->get();
     }
 
     public function save()

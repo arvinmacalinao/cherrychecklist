@@ -26,7 +26,7 @@ public $users = [];
     {
         $this->device = $device;
 
-        $this->users = User::orderBy('name')->get();
+        $this->users = User::role('employee')->orderBy('name')->get();
 
         $this->device_type = $device->device_type;
         $this->brand = $device->brand;
@@ -38,6 +38,17 @@ public $users = [];
 
         $this->user_id =
             $device->activeAssignment?->user_id;
+
+        // The employee currently assigned might not hold the "employee" role
+        // anymore (e.g. promoted to admin) — keep them selectable so the
+        // form still shows who the device is actually assigned to.
+        if ($this->user_id && ! $this->users->contains('id', $this->user_id)) {
+            $assignedUser = User::find($this->user_id);
+
+            if ($assignedUser) {
+                $this->users->push($assignedUser);
+            }
+        }
     }
 
     public function save()
@@ -72,28 +83,40 @@ public $users = [];
 
         ]);
 
-        // Assignment logic
+        // Assignment logic. The active assignment (if any) is closed out with
+        // status=returned/returned_at rather than mutated in place, so
+        // assignment history survives reassignment — never more than one
+        // active assignment per device at a time.
+        $currentAssignment = $this->device->activeAssignment;
+
         if ($this->user_id) {
 
-            $assignment =
-                $this->device->activeAssignment;
-
-            if ($assignment) {
-
-                $assignment->update([
-                    'user_id' => $this->user_id,
-                ]);
-
+            if ($currentAssignment && $currentAssignment->user_id == $this->user_id) {
+                // Same employee already assigned — nothing to change.
             } else {
+
+                if ($currentAssignment) {
+                    $currentAssignment->update([
+                        'status' => 'returned',
+                        'returned_at' => now(),
+                    ]);
+                }
 
                 $this->device
                     ->assignments()
                     ->create([
                         'user_id' => $this->user_id,
+                        'status' => 'active',
                         'assigned_at' => now(),
                     ]);
             }
 
+        } elseif ($currentAssignment) {
+            // Selector was cleared — unassign the device.
+            $currentAssignment->update([
+                'status' => 'returned',
+                'returned_at' => now(),
+            ]);
         }
 
         session()->flash(

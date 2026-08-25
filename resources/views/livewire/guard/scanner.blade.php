@@ -1,140 +1,192 @@
-<div class="py-6">
-    <div class="max-w-4xl mx-auto">
+<div class="min-h-screen p-4" wire:ignore>
+    <div class="max-w-xl mx-auto">
 
-        <div class="bg-white p-6 rounded shadow">
+        <div class="card bg-base-100 shadow-xl border border-base-300">
+            <div class="card-body">
 
-            <h1 class="text-xl font-bold mb-4 text-center">
-                QR Scanner
-            </h1>
+                <h1 class="text-2xl font-bold text-center mb-4">
+                    Exit Scanner
+                </h1>
 
-            <!-- Camera -->
-            <div id="reader" class="mb-4"></div>
+                <div id="reader" class="rounded-xl overflow-hidden mb-4"></div>
 
-            <!-- Result -->
-            <div id="result" class="mt-4"></div>
+                <div id="feedback"></div>
 
-            <!-- Scan Again -->
-            <button id="scan-again-btn"
-                class="hidden mt-4 w-full bg-blue-600 text-white py-2 rounded">
-                Scan Again
-            </button>
-
+            </div>
         </div>
+
     </div>
 </div>
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-let html5QrCode;
+(function () {
+    let html5QrCode;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
-document.addEventListener("livewire:navigated", () => {
-    startScanner();
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    startScanner();
-});
-
-function startScanner() {
-
-    if (html5QrCode) {
-        html5QrCode.stop().catch(() => {});
+    function boot() {
+        startScanner();
     }
 
-    html5QrCode = new Html5Qrcode("reader");
+    document.addEventListener('DOMContentLoaded', boot);
+    document.addEventListener('livewire:navigated', boot);
 
-    document.getElementById('result').innerHTML = '';
-    document.getElementById('scan-again-btn').classList.add('hidden');
+    function startScanner() {
+        if (html5QrCode) {
+            html5QrCode.stop().catch(() => {});
+        }
 
-    html5QrCode.start(
-        { facingMode: "environment" },
-        {
-            fps: 10,
-            qrbox: 350
-        },
-        async (decodedText) => {
+        html5QrCode = new Html5Qrcode('reader');
+        renderIdle();
 
-            await html5QrCode.stop();
+        html5QrCode.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: 300 },
+            onScan
+        );
+    }
 
-            try {
-                const response = await fetch(decodedText);
-                const data = await response.json();
+    async function onScan(decodedText) {
+        try {
+            await html5QrCode.pause(true);
+        } catch (e) {
+            // already paused/stopped, ignore
+        }
 
-                document.getElementById('result').innerHTML = renderResult(data);
+        try {
+            const response = await fetch(decodedText, {
+                headers: { 'Accept': 'application/json' },
+            });
+            const data = await response.json();
 
-            } catch (e) {
-                document.getElementById('result').innerHTML =
-                    '<p class="text-red-600">Invalid or expired QR</p>';
+            if (!data.ok) {
+                renderRejected(data.message || 'QR code not recognized.');
+                return;
             }
 
-            document.getElementById('scan-again-btn').classList.remove('hidden');
+            renderEmployee(data);
+        } catch (e) {
+            renderRejected('Could not read this QR code. Try again.');
         }
-    );
-}
+    }
 
-function renderResult(data) {
+    function resumeScanning() {
+        try {
+            html5QrCode.resume();
+        } catch (e) {
+            startScanner();
+        }
+        renderIdle();
+    }
 
-    let deviceRows = '';
-
-    if (data.devices && data.devices.length > 0) {
-        data.devices.forEach(device => {
-            deviceRows += `
-                <tr class="border-t">
-                    <td class="px-3 py-2">${device.type}</td>
-                    <td class="px-3 py-2">${device.brand}</td>
-                    <td class="px-3 py-2">${device.model}</td>
-                    <td class="px-3 py-2">${device.serial ?? '-'}</td>
-                    <td class="px-3 py-2">${device.imei ?? '-'}</td>
-                </tr>
-            `;
-        });
-    } else {
-        deviceRows = `
-            <tr>
-                <td colspan="5" class="text-center py-3 text-gray-500">
-                    No devices found
-                </td>
-            </tr>
+    function renderIdle() {
+        document.getElementById('feedback').innerHTML = `
+            <div class="text-center text-sm opacity-60 py-6">
+                Point the camera at an employee's QR code
+            </div>
         `;
     }
 
-    return `
-        <div class="border rounded p-4">
+    function renderRejected(message) {
+        document.getElementById('feedback').innerHTML = `
+            <div class="alert alert-error mb-4">
+                <span>${escapeHtml(message)}</span>
+            </div>
+            <button id="retry-btn" class="btn btn-block btn-lg">
+                Scan Again
+            </button>
+        `;
+        document.getElementById('retry-btn').addEventListener('click', resumeScanning);
+    }
 
-            <h2 class="font-bold text-lg mb-2">${data.name}</h2>
+    function renderEmployee(data) {
+        const devices = (data.devices && data.devices.length)
+            ? data.devices.map(d => `
+                <tr>
+                    <td class="p-2">${escapeHtml(d.type)}</td>
+                    <td class="p-2">${escapeHtml(d.brand)}</td>
+                    <td class="p-2">${escapeHtml(d.model)}</td>
+                    <td class="p-2 font-mono text-xs">${escapeHtml(d.serial || '-')}</td>
+                </tr>
+            `).join('')
+            : `<tr><td colspan="4" class="text-center p-4 opacity-60">No devices assigned</td></tr>`;
 
-            <div class="mb-3 text-sm">
-                <p><strong>Employee ID:</strong> ${data.employee_id ?? '-'}</p>
-                <p><strong>Department:</strong> ${data.department ?? '-'}</p>
+        const initial = escapeHtml((data.name || 'U').charAt(0).toUpperCase());
+
+        const avatar = data.photo_url
+            ? `<img src="${escapeHtml(data.photo_url)}" class="w-16 h-16 rounded-full object-cover" alt="">`
+            : `<div class="avatar placeholder">
+                   <div class="bg-primary text-primary-content rounded-full w-16">
+                       <span class="text-xl">${initial}</span>
+                   </div>
+               </div>`;
+
+        document.getElementById('feedback').innerHTML = `
+            <div class="border border-base-300 rounded-xl p-4 mb-4">
+                <div class="flex items-center gap-4 mb-4">
+                    ${avatar}
+                    <div>
+                        <div class="text-lg font-bold">${escapeHtml(data.name)}</div>
+                        <div class="text-sm opacity-70">${escapeHtml(data.employee_id || '-')}</div>
+                        <div class="text-sm opacity-70">${escapeHtml(data.company || '-')} &middot; ${escapeHtml(data.designation || '-')}</div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra table-sm">
+                        <thead>
+                            <tr><th>Type</th><th>Brand</th><th>Model</th><th>Serial</th></tr>
+                        </thead>
+                        <tbody>${devices}</tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm border border-gray-200">
+            <button id="confirm-btn" class="btn btn-success btn-block btn-lg">
+                Confirm Exit
+            </button>
+        `;
 
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-3 py-2 text-left">Type</th>
-                            <th class="px-3 py-2 text-left">Brand</th>
-                            <th class="px-3 py-2 text-left">Model</th>
-                            <th class="px-3 py-2 text-left">Serial</th>
-                            <th class="px-3 py-2 text-left">IMEI</th>
-                        </tr>
-                    </thead>
+        document.getElementById('confirm-btn').addEventListener('click', () => confirmExit(data.token));
+    }
 
-                    <tbody>
-                        ${deviceRows}
-                    </tbody>
+    async function confirmExit(token) {
+        const btn = document.getElementById('confirm-btn');
+        btn.disabled = true;
+        btn.textContent = 'Logging...';
 
-                </table>
+        let ok = false;
+        let message = 'Could not log exit.';
+
+        try {
+            const response = await fetch(`/qr/${token}/confirm`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                },
+            });
+            const data = await response.json();
+            ok = !!data.ok;
+            message = data.message || message;
+        } catch (e) {
+            message = 'Network error. Try again.';
+        }
+
+        document.getElementById('feedback').innerHTML = `
+            <div class="alert ${ok ? 'alert-success' : 'alert-error'} text-center text-lg font-semibold py-6">
+                ${ok ? '&#10003; ' + escapeHtml(message) : escapeHtml(message)}
             </div>
+        `;
 
-        </div>
-    `;
-}
+        setTimeout(resumeScanning, 1200);
+    }
 
-// Scan again button
-document.getElementById('scan-again-btn').addEventListener('click', () => {
-    window.location.reload();
-});
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str ?? '';
+        return div.innerHTML;
+    }
+})();
 </script>

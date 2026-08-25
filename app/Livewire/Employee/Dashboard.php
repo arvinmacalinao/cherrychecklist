@@ -3,42 +3,23 @@
 namespace App\Livewire\Employee;
 
 use Livewire\Component;
-use Illuminate\Support\Facades\URL;
 
 class Dashboard extends Component
 {
-    public $qrUrl;
-
-    public function mount()
+    public function regenerateQr(): void
     {
-        // only generate if not existing
-        if (!session()->has('qr_url')) {
-            $this->generateQr();
-        } else {
-            $this->qrUrl = session('qr_url');
-        }
-    }
+        auth()->user()->regenerateQrToken();
 
-    public function generateQr()
-    {
-        $this->qrUrl = URL::temporarySignedRoute(
-            'qr.verify',
-            now()->addDays(90),
-            ['user' => auth()->id()]
-        );
-
-        // store it
-        session(['qr_url' => $this->qrUrl]);
-
-        return redirect()->route('employee.dashboard');
+        session()->flash('message', 'A new QR code has been generated. Your previous QR code no longer works.');
     }
 
     public function render()
     {
-        $user = auth()->user()->load('activeDevices.device');
+        $user = auth()->user()->load(['activeDevices.device', 'company', 'designation']);
 
         return view('livewire.employee.dashboard', [
-            'user' => $user
-        ])->layout('layouts.app');
+            'user' => $user,
+            'qrUrl' => $user->qrCodeUrl(),
+        ])->layout('layouts.employee');
     }
 }

@@ -2,40 +2,24 @@
 
 namespace App\Livewire\Admin\Users;
 
+use App\Livewire\Concerns\ResetsPageOnUpdate;
+use App\Livewire\Concerns\Sortable;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, ResetsPageOnUpdate, Sortable;
 
     protected string $paginationTheme = 'tailwind';
 
-    public $perPage = 10;
-    public $search = '';
-    public $sortField = 'name';
-    public $sortAsc = true;
-
-    public function updatingSearch()
+    public function mount(): void
     {
-        $this->resetPage();
-    }
-
-    public function updatingPerPage()
-    {
-        $this->resetPage();
-    }
-
-    public function sortBy($field): void
-    {
-        if ($this->sortField === $field) {
-            $this->sortAsc = ! $this->sortAsc;
-        } else {
-            $this->sortAsc = true;
-        }
-
-        $this->sortField = $field;
+        // Set here rather than as a redeclared property: PHP 8.3 treats a
+        // class property overriding a trait property with a different
+        // default value as a fatal "incompatible" composition error.
+        $this->sortField = 'name';
     }
 
     public function render()

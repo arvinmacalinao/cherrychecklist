@@ -9,6 +9,7 @@ use App\Models\EmployeeDeviceAssignment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -53,10 +54,52 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+    protected static function booted(): void
+    {
+        // Every locally-created user (HR sync's first insert, or an admin
+        // manually creating one) gets a permanent QR credential immediately.
+        // updateOrCreate() on an existing row only fires "updating", never
+        // "creating", so this never touches an already-issued token.
+        static::creating(function (User $user) {
+            if (! $user->qr_token) {
+                $user->qr_token = (string) Str::uuid();
+            }
+        });
+    }
+
     public function scopeSearch($query, $value): void
     {
         $query->where('name', 'like', "%{$value}%")
             ->orWhere('email', 'like', "%{$value}%");
+    }
+
+    /**
+     * Rotate this user's QR credential. The previous token stops working
+     * the instant this is saved, since lookups are always by exact match.
+     */
+    public function regenerateQrToken(): string
+    {
+        $this->forceFill(['qr_token' => (string) Str::uuid()])->save();
+
+        return $this->qr_token;
+    }
+
+    public function qrCodeUrl(): string
+    {
+        return route('qr.show', ['token' => $this->qr_token]);
+    }
+
+    public function dashboardRedirect(): \Illuminate\Http\RedirectResponse
+    {
+        if ($this->hasRole('admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($this->hasRole('employee')) {
+            return redirect()->route('employee.dashboard');
+        }
+
+        return redirect('/');
     }
 
 

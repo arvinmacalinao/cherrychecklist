@@ -6,9 +6,9 @@ use Livewire\Component;
 
 class Scanner extends Component
 {
-     public function render()
+    public function render()
     {
         return view('livewire.guard.scanner')
-            ->layout('layouts.app');
+            ->layout('layouts.kiosk');
     }
 }
