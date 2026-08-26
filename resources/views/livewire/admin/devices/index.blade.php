@@ -134,7 +134,7 @@
 
                         @forelse ($devices as $device)
 
-                            <tr>
+                            <tr wire:key="device-{{ $device->id }}">
 
                                 <td>
                                     {{ ($devices->currentPage() - 1) * $devices->perPage() + $loop->iteration }}
@@ -250,9 +250,9 @@
 
                                     <div class="flex items-center justify-center gap-2">
 
-                                        <button class="btn btn-xs btn-info">
+                                        <a class="btn btn-xs btn-info" href="{{ route('admin.devices.show', $device) }}">
                                             View
-                                        </button>
+                                        </a>
 
                                         <a class="btn btn-xs btn-warning" href="{{ route('admin.devices.edit', $device) }}">
                                             Edit

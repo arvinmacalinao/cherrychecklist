@@ -31,6 +31,7 @@
             @endif
 
             {{-- FORM --}}
+            <div wire:key="device-form-{{ $formKey }}">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 ">
 
                 {{-- DEVICE TYPE --}}
@@ -100,6 +101,10 @@
 
                     </select>
 
+                    @error('device_type')
+                        <span class="text-error text-sm">{{ $message }}</span>
+                    @enderror
+
                 </div>
 
                 {{-- BRAND --}}
@@ -116,6 +121,10 @@
                         wire:model="brand"
                         placeholder="Apple, Samsung, Lenovo..."
                         class="input input-bordered w-full bg-base-100" />
+
+                    @error('brand')
+                        <span class="text-error text-sm">{{ $message }}</span>
+                    @enderror
 
                 </div>
 
@@ -134,6 +143,10 @@
                         placeholder="MacBook Pro, iPhone 15..."
                         class="input input-bordered w-full bg-base-100" />
 
+                    @error('model')
+                        <span class="text-error text-sm">{{ $message }}</span>
+                    @enderror
+
                 </div>
 
                 {{-- SERIAL --}}
@@ -150,6 +163,10 @@
                         wire:model="serial_number"
                         placeholder="Enter serial number"
                         class="input input-bordered w-full bg-base-100" />
+
+                    @error('serial_number')
+                        <span class="text-error text-sm">{{ $message }}</span>
+                    @enderror
 
                 </div>
 
@@ -168,6 +185,10 @@
                         placeholder="Optional"
                         class="input input-bordered w-full bg-base-100" />
 
+                    @error('imei')
+                        <span class="text-error text-sm">{{ $message }}</span>
+                    @enderror
+
                 </div>
 
                 {{-- ASSET TAG --}}
@@ -185,8 +206,13 @@
                         placeholder="Optional"
                         class="input input-bordered w-full bg-base-100" />
 
+                    @error('asset_tag')
+                        <span class="text-error text-sm">{{ $message }}</span>
+                    @enderror
+
                 </div>
 
+            </div>
             </div>
 
             {{-- USER ASSIGNMENT --}}

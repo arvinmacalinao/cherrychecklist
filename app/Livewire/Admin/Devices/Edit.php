@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Devices;
 
 use App\Models\Device;
 use App\Models\User;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Edit extends Component
@@ -61,11 +62,20 @@ public $users = [];
 
             'model' => 'required|string|max:255',
 
-            'serial_number' => 'required|string|max:255',
+            'serial_number' => [
+                'required', 'string', 'max:255',
+                Rule::unique('devices', 'serial_number')->ignore($this->device->id),
+            ],
 
-            'imei' => 'nullable|string|max:255',
+            'imei' => [
+                'nullable', 'string', 'max:255',
+                Rule::unique('devices', 'imei')->ignore($this->device->id),
+            ],
 
-            'asset_tag' => 'nullable|string|max:255',
+            'asset_tag' => [
+                'nullable', 'string', 'max:255',
+                Rule::unique('devices', 'asset_tag')->ignore($this->device->id),
+            ],
 
             'status' => 'required',
 

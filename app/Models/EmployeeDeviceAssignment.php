@@ -13,6 +13,11 @@ class EmployeeDeviceAssignment extends Model
         'user_id', 'device_id', 'assigned_at', 'returned_at', 'status', 'created_at', 'updated_at'
     ];
 
+    protected $casts = [
+        'assigned_at' => 'datetime',
+        'returned_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

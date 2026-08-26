@@ -6,6 +6,7 @@ use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Admin\Devices\Create as DeviceCreate;
 use App\Livewire\Admin\Devices\Edit as DeviceEdit;
 use App\Livewire\Admin\Devices\Index as DeviceIndex;
+use App\Livewire\Admin\Devices\Show as DeviceShow;
 use App\Livewire\Admin\Logs\Index as LogsIndex;
 use App\Livewire\Admin\Users\Create as UserCreate;
 use App\Livewire\Admin\Users\Edit as UserEdit;
@@ -57,6 +58,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/admin/devices', DeviceIndex::class)->name('admin.devices.index');
     Route::get('/admin/devices/create', DeviceCreate::class)->name('admin.devices.create');
+    Route::get('/admin/devices/{device}', DeviceShow::class)->name('admin.devices.show');
     Route::get('/admin/devices/{device}/edit', DeviceEdit::class)->name('admin.devices.edit');
 
     Route::get('/admin/logs', LogsIndex::class)->name('admin.logs');
