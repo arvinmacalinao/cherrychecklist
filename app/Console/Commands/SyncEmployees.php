@@ -96,8 +96,11 @@ class SyncEmployees extends Command
             // HR never sends a password. New accounts start with their
             // employee_id as a temporary password (the 'hashed' cast on
             // User::password hashes this automatically on save); existing
-            // accounts are never touched here.
+            // accounts are never touched here. Since employee_id is
+            // predictable, the account is forced to set a real password
+            // on first login.
             $values['password'] = $employee['employee_id'];
+            $values['must_change_password'] = true;
         }
 
         $user = User::updateOrCreate(

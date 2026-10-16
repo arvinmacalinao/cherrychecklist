@@ -108,9 +108,10 @@
                     <td class="p-2">${escapeHtml(d.brand)}</td>
                     <td class="p-2">${escapeHtml(d.model)}</td>
                     <td class="p-2 font-mono text-xs">${escapeHtml(d.serial || '-')}</td>
+                    <td class="p-2 font-mono text-xs">${escapeHtml(d.imei || '-')}</td>
                 </tr>
             `).join('')
-            : `<tr><td colspan="4" class="text-center p-4 opacity-60">No devices assigned</td></tr>`;
+            : `<tr><td colspan="5" class="text-center p-4 opacity-60">No devices assigned</td></tr>`;
 
         const initial = escapeHtml((data.name || 'U').charAt(0).toUpperCase());
 
@@ -136,7 +137,7 @@
                 <div class="overflow-x-auto">
                     <table class="table table-zebra table-sm">
                         <thead>
-                            <tr><th>Type</th><th>Brand</th><th>Model</th><th>Serial</th></tr>
+                            <tr><th>Type</th><th>Brand</th><th>Model</th><th>Serial</th><th>IMEI</th></tr>
                         </thead>
                         <tbody>${devices}</tbody>
                     </table>

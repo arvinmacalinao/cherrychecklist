@@ -34,6 +34,7 @@ class User extends Authenticatable
         'qr_token',
         'status',
         'photo_path',
+        'must_change_password',
     ];
 
     /**
@@ -54,6 +55,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'must_change_password' => 'boolean',
     ];
 
     protected static function booted(): void

@@ -55,6 +55,9 @@ class Create extends Component
             'status' => $this->status,
             'company_id' => $this->company_id,
             'designation_id' => $this->designation_id,
+            // The admin picked this password, not the employee — force it
+            // to be changed on first login.
+            'must_change_password' => true,
         ]);
 
         // default employee role

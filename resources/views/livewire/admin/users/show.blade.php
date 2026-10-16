@@ -26,6 +26,14 @@
             <button
                 type="button"
                 x-data=""
+                x-on:click="$dispatch('open-modal', 'confirm-reset-password')"
+                class="btn btn-ghost btn-sm">
+                Reset Password
+            </button>
+
+            <button
+                type="button"
+                x-data=""
                 x-on:click="$dispatch('open-modal', 'confirm-status-toggle')"
                 class="btn btn-sm {{ $user->status === 'active' ? 'btn-error' : 'btn-success' }}">
                 {{ $user->status === 'active' ? 'Mark as Inactive' : 'Mark as Active' }}
@@ -39,6 +47,18 @@
     @if (session()->has('message'))
         <div class="alert alert-success">
             <span>{{ session('message') }}</span>
+        </div>
+    @endif
+
+    {{-- GENERATED PASSWORD (shown once, right after a reset) --}}
+    @if ($generatedPassword)
+        <div class="alert alert-warning">
+            <span>
+                Password reset. New password for {{ $user->name }}:
+                <span class="font-mono font-bold">{{ $generatedPassword }}</span>
+                — copy it now, it won't be shown again. They'll be asked to set
+                their own password on next login.
+            </span>
         </div>
     @endif
 
@@ -187,6 +207,34 @@
                     x-on:click="$dispatch('close')"
                     class="btn {{ $user->status === 'active' ? 'btn-error' : 'btn-success' }}">
                     {{ $user->status === 'active' ? 'Yes, Mark Inactive' : 'Yes, Mark Active' }}
+                </button>
+            </div>
+        </div>
+    </x-modal>
+
+    <x-modal name="confirm-reset-password" focusable>
+        <div class="p-6">
+            <h2 class="text-lg font-medium text-gray-900">
+                Reset {{ $user->name }}'s password?
+            </h2>
+
+            <p class="mt-1 text-sm text-gray-600">
+                A new random password will be generated and shown here once.
+                {{ $user->name }} will be required to set their own password
+                the next time they log in.
+            </p>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <x-secondary-button x-on:click="$dispatch('close')">
+                    Cancel
+                </x-secondary-button>
+
+                <button
+                    type="button"
+                    wire:click="resetPassword"
+                    x-on:click="$dispatch('close')"
+                    class="btn btn-warning">
+                    Yes, Reset Password
                 </button>
             </div>
         </div>

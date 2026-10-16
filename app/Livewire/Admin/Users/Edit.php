@@ -121,11 +121,13 @@ class Edit extends Component
 
         $this->user->syncRoles([$this->role]);
 
-        // Update password only if filled
+        // Update password only if filled. The admin picked this password,
+        // not the employee — force it to be changed on next login.
         if ($this->password) {
 
             $this->user->update([
                 'password' => Hash::make($this->password),
+                'must_change_password' => true,
             ]);
         }
 
