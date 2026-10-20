@@ -153,6 +153,7 @@
                             <th>Model</th>
                             <th>Serial</th>
                             <th>IMEI</th>
+                            <th></th>
                         </tr>
                     </thead>
 
@@ -164,10 +165,17 @@
                                 <td>{{ $assignment->device->model }}</td>
                                 <td>{{ $assignment->device->serial_number }}</td>
                                 <td>{{ $assignment->device->imei ?? '-' }}</td>
+                                <td class="text-right">
+                                    <a
+                                        href="{{ route('admin.devices.edit', $assignment->device) }}"
+                                        class="btn btn-xs btn-warning">
+                                        Edit
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-8 opacity-60">
+                                <td colspan="6" class="text-center py-8 opacity-60">
                                     No devices assigned
                                 </td>
                             </tr>

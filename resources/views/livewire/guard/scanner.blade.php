@@ -1,5 +1,5 @@
 <div class="min-h-screen p-4" wire:ignore>
-    <div class="max-w-xl mx-auto">
+    <div class="max-w-2xl mx-auto">
 
         <div class="card bg-base-100 shadow-xl border border-base-300">
             <div class="card-body">
@@ -24,6 +24,8 @@
 (function () {
     let html5QrCode;
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const reader = document.getElementById('reader');
+    const feedback = document.getElementById('feedback');
 
     function boot() {
         startScanner();
@@ -38,6 +40,7 @@
         }
 
         html5QrCode = new Html5Qrcode('reader');
+        showReader();
         renderIdle();
 
         html5QrCode.start(
@@ -47,12 +50,34 @@
         );
     }
 
+    function showReader() {
+        reader.classList.remove('hidden');
+    }
+
+    function hideReader() {
+        reader.classList.add('hidden');
+    }
+
+    // Wraps an action so it only ever fires once per screen — a tap and
+    // the auto-advance timeout (where one exists) can both be live at the
+    // same time, and only the first should actually do anything.
+    function once(fn) {
+        let called = false;
+        return (...args) => {
+            if (called) return;
+            called = true;
+            fn(...args);
+        };
+    }
+
     async function onScan(decodedText) {
         try {
             await html5QrCode.pause(true);
         } catch (e) {
             // already paused/stopped, ignore
         }
+
+        hideReader();
 
         try {
             const response = await fetch(decodedText, {
@@ -72,16 +97,19 @@
     }
 
     function resumeScanning() {
+        feedback.onclick = null;
+
         try {
             html5QrCode.resume();
         } catch (e) {
             startScanner();
         }
+        showReader();
         renderIdle();
     }
 
     function renderIdle() {
-        document.getElementById('feedback').innerHTML = `
+        feedback.innerHTML = `
             <div class="text-center text-sm opacity-60 py-6">
                 Point the camera at an employee's QR code
             </div>
@@ -89,73 +117,86 @@
     }
 
     function renderRejected(message) {
-        document.getElementById('feedback').innerHTML = `
+        const advance = once(resumeScanning);
+        feedback.onclick = advance;
+
+        feedback.innerHTML = `
             <div class="alert alert-error mb-4">
-                <span>${escapeHtml(message)}</span>
+                <span class="text-lg">${escapeHtml(message)}</span>
             </div>
-            <button id="retry-btn" class="btn btn-block btn-lg">
-                Scan Again
-            </button>
+            <div class="text-center text-sm opacity-60 py-2">
+                Tap anywhere to scan again
+            </div>
         `;
-        document.getElementById('retry-btn').addEventListener('click', resumeScanning);
     }
 
     function renderEmployee(data) {
         const devices = (data.devices && data.devices.length)
             ? data.devices.map(d => `
-                <tr>
-                    <td class="p-2">${escapeHtml(d.type)}</td>
-                    <td class="p-2">${escapeHtml(d.brand)}</td>
-                    <td class="p-2">${escapeHtml(d.model)}</td>
-                    <td class="p-2 font-mono text-xs">${escapeHtml(d.serial || '-')}</td>
-                    <td class="p-2 font-mono text-xs">${escapeHtml(d.imei || '-')}</td>
-                </tr>
+                <div class="rounded-xl border-2 border-primary/30 bg-base-200 p-4">
+                    <div class="text-sm opacity-70 mb-2">
+                        ${escapeHtml(d.type)} &middot; ${escapeHtml(d.brand)} ${escapeHtml(d.model)}
+                    </div>
+                    <div class="space-y-2">
+                        <div>
+                            <div class="text-xs uppercase opacity-60">Serial</div>
+                            <div class="font-mono text-2xl font-bold tracking-wide break-all">
+                                ${escapeHtml(d.serial || '-')}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xs uppercase opacity-60">IMEI</div>
+                            <div class="font-mono text-2xl font-bold tracking-wide break-all">
+                                ${escapeHtml(d.imei || '-')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `).join('')
-            : `<tr><td colspan="5" class="text-center p-4 opacity-60">No devices assigned</td></tr>`;
+            : `<div class="text-center p-4 opacity-60">No devices assigned</div>`;
 
         const initial = escapeHtml((data.name || 'U').charAt(0).toUpperCase());
 
         const avatar = data.photo_url
-            ? `<img src="${escapeHtml(data.photo_url)}" class="w-16 h-16 rounded-full object-cover" alt="">`
+            ? `<img src="${escapeHtml(data.photo_url)}" class="w-24 h-24 rounded-full object-cover" alt="">`
             : `<div class="avatar placeholder">
-                   <div class="bg-primary text-primary-content rounded-full w-16">
-                       <span class="text-xl">${initial}</span>
+                   <div class="bg-primary text-primary-content rounded-full w-24">
+                       <span class="text-3xl">${initial}</span>
                    </div>
                </div>`;
 
-        document.getElementById('feedback').innerHTML = `
-            <div class="border border-base-300 rounded-xl p-4 mb-4">
-                <div class="flex items-center gap-4 mb-4">
+        const advance = once(() => confirmExit(data.token));
+        feedback.onclick = advance;
+
+        feedback.innerHTML = `
+            <div class="border border-base-300 rounded-xl p-5 mb-4">
+                <div class="flex items-center gap-4 mb-5">
                     ${avatar}
                     <div>
-                        <div class="text-lg font-bold">${escapeHtml(data.name)}</div>
-                        <div class="text-sm opacity-70">${escapeHtml(data.employee_id || '-')}</div>
-                        <div class="text-sm opacity-70">${escapeHtml(data.company || '-')} &middot; ${escapeHtml(data.designation || '-')}</div>
+                        <div class="text-3xl font-bold">${escapeHtml(data.name)}</div>
+                        <div class="text-lg opacity-70">${escapeHtml(data.employee_id || '-')}</div>
+                        <div class="text-lg opacity-70">${escapeHtml(data.company || '-')} &middot; ${escapeHtml(data.designation || '-')}</div>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="table table-zebra table-sm">
-                        <thead>
-                            <tr><th>Type</th><th>Brand</th><th>Model</th><th>Serial</th><th>IMEI</th></tr>
-                        </thead>
-                        <tbody>${devices}</tbody>
-                    </table>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    ${devices}
                 </div>
             </div>
 
-            <button id="confirm-btn" class="btn btn-success btn-block btn-lg">
-                Scan Next Employee
-            </button>
+            <div class="alert alert-success justify-center text-lg font-semibold cursor-pointer">
+                Tap anywhere to confirm exit &amp; continue
+            </div>
         `;
-
-        document.getElementById('confirm-btn').addEventListener('click', () => confirmExit(data.token));
     }
 
     async function confirmExit(token) {
-        const btn = document.getElementById('confirm-btn');
-        btn.disabled = true;
-        btn.textContent = 'Logging...';
+        feedback.onclick = null;
+        feedback.innerHTML = `
+            <div class="text-center text-lg font-semibold py-6 opacity-60">
+                Logging...
+            </div>
+        `;
 
         let ok = false;
         let message = 'Could not log exit.';
@@ -175,13 +216,21 @@
             message = 'Network error. Try again.';
         }
 
-        document.getElementById('feedback').innerHTML = `
-            <div class="alert ${ok ? 'alert-success' : 'alert-error'} text-center text-lg font-semibold py-6">
+        const advance = once(resumeScanning);
+        feedback.onclick = advance;
+
+        feedback.innerHTML = `
+            <div class="alert ${ok ? 'alert-success' : 'alert-error'} text-center text-xl font-semibold py-6 cursor-pointer">
                 ${ok ? '&#10003; ' + escapeHtml(message) : escapeHtml(message)}
+            </div>
+            <div class="text-center text-sm opacity-60 py-2">
+                Tap anywhere to continue
             </div>
         `;
 
-        setTimeout(resumeScanning, 1200);
+        // Tapping advances immediately; this is just the fallback so the
+        // kiosk never gets stuck if nobody taps.
+        setTimeout(advance, 1200);
     }
 
     function escapeHtml(str) {
