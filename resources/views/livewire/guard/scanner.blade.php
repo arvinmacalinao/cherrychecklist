@@ -1,5 +1,5 @@
 <div class="min-h-screen p-4" wire:ignore>
-    <div class="max-w-xl mx-auto">
+    <div class="max-w-3xl mx-auto">
 
         <div class="card bg-base-100 shadow-xl border border-base-300">
             <div class="card-body">
@@ -97,7 +97,7 @@
     }
 
     function resumeScanning() {
-        feedback.onclick = null;
+        document.onclick = null;
 
         try {
             html5QrCode.resume();
@@ -118,7 +118,7 @@
 
     function renderRejected(message) {
         const advance = once(resumeScanning);
-        feedback.onclick = advance;
+        document.onclick = advance;
 
         feedback.innerHTML = `
             <div class="alert alert-error mb-4">
@@ -168,7 +168,7 @@
                </div>`;
 
         const advance = once(() => confirmExit(data.token));
-        feedback.onclick = advance;
+        document.onclick = advance;
 
         feedback.innerHTML = `
             <div class="border border-base-300 rounded-xl p-5 mb-4">
@@ -198,7 +198,7 @@
     }
 
     async function confirmExit(token) {
-        feedback.onclick = null;
+        document.onclick = null;
         feedback.innerHTML = `
             <div class="text-center text-lg font-semibold py-6 opacity-60">
                 Logging...
@@ -224,7 +224,7 @@
         }
 
         const advance = once(resumeScanning);
-        feedback.onclick = advance;
+        document.onclick = advance;
 
         feedback.innerHTML = `
             <div class="alert ${ok ? 'alert-success' : 'alert-error'} text-center text-xl font-semibold py-6 cursor-pointer">
