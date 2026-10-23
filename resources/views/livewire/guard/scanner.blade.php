@@ -132,28 +132,30 @@
 
     function renderEmployee(data) {
         const devices = (data.devices && data.devices.length)
-            ? data.devices.map(d => `
-                <div class="rounded-xl border-2 border-primary/30 bg-base-200 p-4">
-                    <div class="text-sm opacity-70 mb-2">
-                        ${escapeHtml(d.type)} &middot; ${escapeHtml(d.brand)} ${escapeHtml(d.model)}
-                    </div>
-                    <div class="space-y-2">
-                        <div>
-                            <div class="text-xs uppercase opacity-60">Serial</div>
+            ? data.devices.map(d => {
+                // Serial is always present (required on every device);
+                // IMEI only applies to phones/CherryRoam-type devices and
+                // is the more specific identifier when one's on file —
+                // so a device never needs to show both at once.
+                const hasImei = !!d.imei;
+                const idLabel = hasImei ? 'IMEI' : 'Serial';
+                const idValue = hasImei ? d.imei : (d.serial || '-');
+
+                return `
+                    <tr>
+                        <td class="p-3 text-lg">${escapeHtml(d.type)}</td>
+                        <td class="p-3 text-lg">${escapeHtml(d.brand)}</td>
+                        <td class="p-3 text-lg">${escapeHtml(d.model)}</td>
+                        <td class="p-3">
+                            <div class="text-xs uppercase opacity-60">${idLabel}</div>
                             <div class="font-mono text-2xl font-bold tracking-wide break-all">
-                                ${escapeHtml(d.serial || '-')}
+                                ${escapeHtml(idValue)}
                             </div>
-                        </div>
-                        <div>
-                            <div class="text-xs uppercase opacity-60">IMEI</div>
-                            <div class="font-mono text-2xl font-bold tracking-wide break-all">
-                                ${escapeHtml(d.imei || '-')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('')
-            : `<div class="text-center p-4 opacity-60">No devices assigned</div>`;
+                        </td>
+                    </tr>
+                `;
+            }).join('')
+            : `<tr><td colspan="4" class="text-center p-4 opacity-60">No devices assigned</td></tr>`;
 
         const initial = escapeHtml((data.name || 'U').charAt(0).toUpperCase());
 
@@ -179,8 +181,13 @@
                     </div>
                 </div>
 
-                <div class="space-y-3">
-                    ${devices}
+                <div class="overflow-x-auto">
+                    <table class="table">
+                        <thead>
+                            <tr><th>Type</th><th>Brand</th><th>Model</th><th>Serial / IMEI</th></tr>
+                        </thead>
+                        <tbody>${devices}</tbody>
+                    </table>
                 </div>
             </div>
 
