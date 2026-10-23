@@ -1,5 +1,5 @@
 <div class="min-h-screen p-4" wire:ignore>
-    <div class="max-w-2xl mx-auto">
+    <div class="max-w-xl mx-auto">
 
         <div class="card bg-base-100 shadow-xl border border-base-300">
             <div class="card-body">
@@ -179,7 +179,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-3">
                     ${devices}
                 </div>
             </div>
